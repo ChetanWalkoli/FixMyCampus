@@ -1,16 +1,37 @@
 import mongoose from "mongoose";
+import env from "../config/env.js";
 import Complaint from "../models/Complaint.js";
 import ComplaintHistory from "../models/ComplaintHistory.js";
+import Invitation from "../models/Invitation.js";
 import User from "../models/User.js";
+import { sendInvitationEmail } from "../services/emailService.js";
 import { createNotification } from "../services/notificationService.js";
+import { generateSecureToken, hashToken } from "../utils/cryptoTokens.js";
 import { formatZodError } from "../validators/authValidators.js";
 import {
   assignStaffSchema,
   createStaffSchema,
+  inviteUserSchema,
   reviewComplaintSchema,
   updatePrioritySchema,
   updateStaffSchema,
+  updateUserSchema,
+  updateUserStatusSchema,
 } from "../validators/adminValidators.js";
+
+const sanitizeInvitation = (inv) => ({
+  _id: inv._id,
+  name: inv.name,
+  email: inv.email,
+  role: inv.role,
+  department: inv.department || null,
+  employeeId: inv.employeeId || null,
+  status: inv.status,
+  invitedBy: inv.invitedBy,
+  expiresAt: inv.expiresAt,
+  acceptedAt: inv.acceptedAt || null,
+  createdAt: inv.createdAt,
+});
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -637,6 +658,375 @@ export const getAnalytics = async (req, res, next) => {
         })),
         staffWorkload: workloadAgg,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/v1/admin/users/invite
+ * @desc    Invite a Staff or Admin user via single-use activation email
+ * @access  Admin
+ */
+export const inviteUser = async (req, res, next) => {
+  try {
+    const parsed = inviteUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: formatZodError(parsed.error),
+      });
+    }
+
+    const { name, email, role, department, employeeId } = parsed.data;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists",
+      });
+    }
+
+    const existingInvite = await Invitation.findOne({
+      email,
+      status: "pending",
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (existingInvite) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "A pending invitation already exists for this email. You can resend or revoke it.",
+      });
+    }
+
+    const rawToken = generateSecureToken();
+    const tokenHash = hashToken(rawToken);
+    const expiresHours = env.invitationExpiresHours;
+    const expiresAt = new Date(Date.now() + expiresHours * 60 * 60 * 1000);
+
+    const invitation = await Invitation.create({
+      name,
+      email,
+      role,
+      department,
+      employeeId,
+      tokenHash,
+      status: "pending",
+      invitedBy: req.user._id,
+      expiresAt,
+    });
+
+    const activationUrl = `${env.frontendUrl.replace(/\/$/, "")}/activate-account?token=${rawToken}`;
+
+    try {
+      await sendInvitationEmail({
+        to: email,
+        name,
+        role,
+        department,
+        activationUrl,
+        expiresHours,
+      });
+    } catch (emailErr) {
+      await Invitation.findByIdAndDelete(invitation._id);
+      return next(emailErr);
+    }
+
+    const sanitized = await Invitation.findById(invitation._id).populate(
+      "invitedBy",
+      "name email"
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: `Invitation sent to ${email}`,
+      data: {
+        invitation: sanitizeInvitation(sanitized),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/v1/admin/invitations
+ * @desc    List invitations (pending, accepted, revoked, expired)
+ * @access  Admin
+ */
+export const getInvitations = async (_req, res, next) => {
+  try {
+    const invitations = await Invitation.find({})
+      .sort({ createdAt: -1 })
+      .populate("invitedBy", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Invitations retrieved successfully",
+      data: { invitations: invitations.map(sanitizeInvitation) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/v1/admin/invitations/:id/resend
+ * @desc    Rotate token and resend a pending invitation
+ * @access  Admin
+ */
+export const resendInvitation = async (req, res, next) => {
+  try {
+    const invitation = await Invitation.findById(req.params.id);
+    if (!invitation) {
+      return res.status(404).json({
+        success: false,
+        message: "Invitation not found",
+      });
+    }
+
+    if (invitation.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot resend an invitation that is ${invitation.status}`,
+      });
+    }
+
+    const rawToken = generateSecureToken();
+    const tokenHash = hashToken(rawToken);
+    const expiresHours = env.invitationExpiresHours;
+
+    invitation.tokenHash = tokenHash;
+    invitation.expiresAt = new Date(Date.now() + expiresHours * 60 * 60 * 1000);
+    await invitation.save();
+
+    const activationUrl = `${env.frontendUrl.replace(/\/$/, "")}/activate-account?token=${rawToken}`;
+
+    await sendInvitationEmail({
+      to: invitation.email,
+      name: invitation.name,
+      role: invitation.role,
+      department: invitation.department,
+      activationUrl,
+      expiresHours,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Invitation resent to ${invitation.email}`,
+      data: { invitation: sanitizeInvitation(invitation) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   DELETE /api/v1/admin/invitations/:id
+ * @desc    Revoke a pending invitation
+ * @access  Admin
+ */
+export const revokeInvitation = async (req, res, next) => {
+  try {
+    const invitation = await Invitation.findById(req.params.id);
+    if (!invitation) {
+      return res.status(404).json({
+        success: false,
+        message: "Invitation not found",
+      });
+    }
+
+    if (invitation.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot revoke an invitation that is ${invitation.status}`,
+      });
+    }
+
+    invitation.status = "revoked";
+    await invitation.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Invitation revoked",
+      data: { invitation: sanitizeInvitation(invitation) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/v1/admin/users
+ * @desc    List all users with search and role/department/status filters
+ * @access  Admin
+ */
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const { search, role, department, status } = req.query;
+    const filter = {};
+
+    if (typeof role === "string" && role !== "all") {
+      filter.role = role;
+    }
+
+    if (typeof department === "string" && department.trim() && department !== "all") {
+      filter.department = new RegExp(escapeRegex(department.trim()), "i");
+    }
+
+    if (status === "active") {
+      filter.isActive = true;
+    } else if (status === "inactive") {
+      filter.isActive = false;
+    }
+
+    if (typeof search === "string" && search.trim()) {
+      const regex = new RegExp(escapeRegex(search.trim()), "i");
+      filter.$or = [{ name: regex }, { email: regex }];
+    }
+
+    const users = await User.find(filter).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: { users },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   PATCH /api/v1/admin/users/:id
+ * @desc    Edit user profile details or role (with last-active-admin protection)
+ * @access  Admin
+ */
+export const updateUser = async (req, res, next) => {
+  try {
+    const parsed = updateUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: formatZodError(parsed.error),
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isSelf = user._id.toString() === req.user._id.toString();
+    if (
+      parsed.data.role !== undefined &&
+      parsed.data.role !== user.role &&
+      user.role === "admin"
+    ) {
+      if (isSelf) {
+        return res.status(400).json({
+          success: false,
+          message: "You cannot remove your own administrator role",
+        });
+      }
+
+      const activeAdmins = await User.countDocuments({
+        role: "admin",
+        isActive: true,
+      });
+      if (activeAdmins <= 1 && user.isActive) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot change the role of the last active administrator",
+        });
+      }
+    }
+
+    if (parsed.data.name !== undefined) user.name = parsed.data.name;
+    if (parsed.data.department !== undefined)
+      user.department = parsed.data.department;
+    if (parsed.data.employeeId !== undefined)
+      user.employeeId = parsed.data.employeeId;
+    if (parsed.data.role !== undefined) user.role = parsed.data.role;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: { user },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   PATCH /api/v1/admin/users/:id/status
+ * @desc    Activate or deactivate a user account (with last-active-admin & self protection)
+ * @access  Admin
+ */
+export const updateUserStatus = async (req, res, next) => {
+  try {
+    const parsed = updateUserStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: formatZodError(parsed.error),
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const { isActive } = parsed.data;
+
+    if (!isActive) {
+      if (user._id.toString() === req.user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "You cannot deactivate your own account",
+        });
+      }
+
+      if (user.role === "admin" && user.isActive) {
+        const activeAdmins = await User.countDocuments({
+          role: "admin",
+          isActive: true,
+        });
+        if (activeAdmins <= 1) {
+          return res.status(400).json({
+            success: false,
+            message: "Cannot deactivate the last active administrator",
+          });
+        }
+      }
+    }
+
+    user.isActive = isActive;
+    if (!isActive) {
+      user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+    }
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: isActive
+        ? "User account activated"
+        : "User account deactivated",
+      data: { user },
     });
   } catch (error) {
     next(error);

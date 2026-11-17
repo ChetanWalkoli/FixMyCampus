@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -12,6 +11,10 @@ import {
 } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { PriorityBadge, StatusBadge } from "../../components/common/StatusBadge";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Alert, LoadingRows } from "../../components/ui/Feedback";
+import { Textarea } from "../../components/ui/FormFields";
 import {
   getComplaintById,
   submitComplaintFeedback,
@@ -62,9 +65,7 @@ export default function ComplaintDetailsPage() {
       setComment("");
       await loadDetails();
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to submit feedback."
-      );
+      setError(err.response?.data?.message || "Unable to submit feedback.");
     } finally {
       setIsSubmittingFeedback(false);
     }
@@ -77,11 +78,11 @@ export default function ComplaintDetailsPage() {
           ? `${complaint.complaintId} — ${complaint.title}`
           : "Complaint Details"
       }
-      subtitle="View full complaint information, resolution proof, and status history."
+      subtitle="Full complaint information, resolution proof, and status history."
       actions={
         <Link
           to="/student/complaints"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to My Complaints
@@ -89,30 +90,21 @@ export default function ComplaintDetailsPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-          Loading complaint details...
-        </div>
+        <Card>
+          <LoadingRows rows={4} />
+        </Card>
       ) : (
         <>
-          {error && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {feedbackSuccess && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{feedbackSuccess}</span>
-            </div>
-          )}
+          <Alert className="mb-5">{error}</Alert>
+          <Alert variant="success" className="mb-5">
+            {feedbackSuccess}
+          </Alert>
 
           {complaint && (
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                  <div className="flex flex-wrap items-center gap-2.5">
+                <Card className="p-6">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={complaint.status} />
                     <PriorityBadge priority={complaint.priority} />
                     <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-700">
@@ -120,10 +112,10 @@ export default function ComplaintDetailsPage() {
                     </span>
                   </div>
 
-                  <h2 className="mt-4 text-lg font-semibold text-slate-900">
+                  <h2 className="mt-4 text-sm font-semibold text-slate-900">
                     Description
                   </h2>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                  <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-600">
                     {complaint.description}
                   </p>
 
@@ -172,14 +164,14 @@ export default function ComplaintDetailsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
 
                 {complaint.images?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Submitted Photos
                     </h2>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {complaint.images.map((img) => (
                         <a
                           key={img.publicId}
@@ -196,15 +188,15 @@ export default function ComplaintDetailsPage() {
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
                 {complaint.resolutionProof?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Resolution Proof Photos
                     </h2>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {complaint.resolutionProof.map((img) => (
                         <a
                           key={img.publicId}
@@ -221,19 +213,21 @@ export default function ComplaintDetailsPage() {
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
                 {complaint.status === "resolved" &&
                   !complaint.feedback?.submittedAt && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-                      <h2 className="text-base font-semibold text-slate-900">
-                        Verify Resolution &amp; Submit Feedback
-                      </h2>
-                      <p className="text-sm text-slate-600">
-                        Rate the repair work to close this complaint, or reopen
-                        it if the issue persists.
-                      </p>
+                    <Card className="space-y-4 p-6">
+                      <div>
+                        <h2 className="text-sm font-semibold text-slate-900">
+                          Verify Resolution &amp; Submit Feedback
+                        </h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Rate the repair work to close this complaint, or
+                          reopen it if the issue persists.
+                        </p>
+                      </div>
 
                       <div className="flex items-center gap-1.5">
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -242,7 +236,7 @@ export default function ComplaintDetailsPage() {
                             type="button"
                             onClick={() => setRating(star)}
                             aria-label={`Rate ${star} stars`}
-                            className="p-1 transition hover:scale-110"
+                            className="p-1 transition-transform hover:scale-110"
                           >
                             <Star
                               className={`h-6 w-6 ${
@@ -253,47 +247,47 @@ export default function ComplaintDetailsPage() {
                             />
                           </button>
                         ))}
-                        <span className="ml-2 text-sm font-medium text-slate-700">
+                        <span className="ml-2 text-sm font-medium text-slate-700 tabular-nums">
                           {rating} / 5
                         </span>
                       </div>
 
-                      <textarea
+                      <Textarea
+                        id="feedbackComment"
                         rows={3}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         placeholder="Share feedback on the repair (required if reopening)..."
-                        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
                       />
 
                       <div className="flex flex-wrap gap-3">
-                        <button
+                        <Button
                           type="button"
+                          variant="success"
                           disabled={isSubmittingFeedback}
                           onClick={() => handleFeedback("close")}
-                          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                         >
                           <CheckCircle2 className="h-4 w-4" />
                           Confirm &amp; Close
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="dangerSoft"
                           disabled={
                             isSubmittingFeedback || comment.trim().length < 5
                           }
                           onClick={() => handleFeedback("reopen")}
-                          className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
                         >
                           <RotateCcw className="h-4 w-4" />
                           Reopen Issue
-                        </button>
+                        </Button>
                       </div>
-                    </div>
+                    </Card>
                   )}
 
                 {complaint.feedback?.submittedAt && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Your Feedback
                     </h2>
                     <div className="mt-2 flex items-center gap-1">
@@ -307,7 +301,7 @@ export default function ComplaintDetailsPage() {
                           }`}
                         />
                       ))}
-                      <span className="ml-2 text-xs text-slate-500">
+                      <span className="ml-2 text-xs text-slate-500 tabular-nums">
                         Submitted{" "}
                         {new Date(
                           complaint.feedback.submittedAt
@@ -319,12 +313,12 @@ export default function ComplaintDetailsPage() {
                         {complaint.feedback.comment}
                       </p>
                     )}
-                  </div>
+                  </Card>
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs h-fit">
-                <h2 className="text-base font-semibold text-slate-900">
+              <Card className="h-fit p-6">
+                <h2 className="text-sm font-semibold text-slate-900">
                   Status Timeline
                 </h2>
                 {history.length === 0 ? (
@@ -335,7 +329,7 @@ export default function ComplaintDetailsPage() {
                   <ol className="mt-5 space-y-5 border-l border-slate-200 pl-4">
                     {history.map((entry) => (
                       <li key={entry._id} className="relative">
-                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-indigo-600 ring-4 ring-white" />
+                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-700 ring-4 ring-white" />
                         <p className="text-sm font-medium capitalize text-slate-900">
                           {entry.action.replace("_", " ")}
                         </p>
@@ -344,7 +338,7 @@ export default function ComplaintDetailsPage() {
                             {entry.note}
                           </p>
                         )}
-                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400 tabular-nums">
                           <Clock className="h-3 w-3" />
                           <span>
                             {new Date(entry.createdAt).toLocaleString()}
@@ -354,7 +348,7 @@ export default function ComplaintDetailsPage() {
                     ))}
                   </ol>
                 )}
-              </div>
+              </Card>
             </div>
           )}
         </>

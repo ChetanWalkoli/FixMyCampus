@@ -51,8 +51,12 @@
 | --- | --- | --- | --- |
 | `POST` | `/auth/register` | Public | Register a student account (forces `role: "student"`) |
 | `POST` | `/auth/login` | Public | Authenticate user and set HTTP-only JWT cookie |
+| `POST` | `/auth/activate-account` | Public | Activate an invited Staff/Admin account using single-use token |
+| `POST` | `/auth/forgot-password` | Public | Send password reset link (non-enumerating response) |
+| `POST` | `/auth/reset-password` | Public | Reset password with single-use token & invalidate prior sessions |
 | `GET` | `/auth/me` | Authenticated | Return current authenticated user |
 | `POST` | `/auth/logout` | Authenticated | Clear authentication cookie |
+| `PATCH` | `/auth/change-password` | Authenticated | Change password (requires current password, rotates session) |
 
 ### Student Complaints
 | Method | Endpoint | Access | Purpose |
@@ -73,6 +77,13 @@
 | `GET` | `/admin/staff` | Admin | List maintenance staff accounts |
 | `POST` | `/admin/staff` | Admin | Create maintenance staff account |
 | `PATCH` | `/admin/staff/:id` | Admin | Update staff details or active status |
+| `GET` | `/admin/users` | Admin | List all users with search, role, department, and status filters |
+| `POST` | `/admin/users/invite` | Admin | Invite Staff or Admin via single-use email activation link |
+| `PATCH` | `/admin/users/:id` | Admin | Edit user details or role (with last-admin protection) |
+| `PATCH` | `/admin/users/:id/status` | Admin | Activate/deactivate user (with last-admin & self protection) |
+| `GET` | `/admin/invitations` | Admin | List all user invitations |
+| `POST` | `/admin/invitations/:id/resend` | Admin | Rotate token and resend pending invitation |
+| `DELETE` | `/admin/invitations/:id` | Admin | Revoke a pending invitation |
 | `POST` | `/admin/users` | Admin | Provision `staff` or `admin` account |
 | `GET` | `/admin/analytics` | Admin | Aggregated counts, resolution time, category/status/monthly trends, staff workload |
 

@@ -37,7 +37,7 @@ export const STATUS_META = {
   },
   in_progress: {
     label: "In Progress",
-    className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
   },
   resolved: {
     label: "Resolved",

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -11,6 +10,10 @@ import {
 } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { PriorityBadge, StatusBadge } from "../../components/common/StatusBadge";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Alert, LoadingRows } from "../../components/ui/Feedback";
+import { Select, Textarea } from "../../components/ui/FormFields";
 import { COMPLAINT_PRIORITIES } from "../../constants/complaintOptions";
 import {
   assignComplaintStaff,
@@ -133,7 +136,7 @@ export default function AdminComplaintDetailsPage() {
       actions={
         <Link
           to="/admin/complaints"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to All Complaints
@@ -141,30 +144,21 @@ export default function AdminComplaintDetailsPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-          Loading complaint details...
-        </div>
+        <Card>
+          <LoadingRows rows={4} />
+        </Card>
       ) : (
         <>
-          {error && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {feedback && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{feedback}</span>
-            </div>
-          )}
+          <Alert className="mb-5">{error}</Alert>
+          <Alert variant="success" className="mb-5">
+            {feedback}
+          </Alert>
 
           {complaint && (
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                  <div className="flex flex-wrap items-center gap-2.5">
+                <Card className="p-6">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={complaint.status} />
                     <PriorityBadge priority={complaint.priority} />
                     <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-700">
@@ -172,10 +166,10 @@ export default function AdminComplaintDetailsPage() {
                     </span>
                   </div>
 
-                  <h2 className="mt-4 text-base font-semibold text-slate-900">
+                  <h2 className="mt-4 text-sm font-semibold text-slate-900">
                     Issue Description
                   </h2>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                  <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-600">
                     {complaint.description}
                   </p>
 
@@ -209,14 +203,14 @@ export default function AdminComplaintDetailsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
 
                 {complaint.images?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Submitted Photos
                     </h2>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {complaint.images.map((img) => (
                         <a
                           key={img.publicId}
@@ -233,17 +227,17 @@ export default function AdminComplaintDetailsPage() {
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                  <h2 className="text-base font-semibold text-slate-900">
+                <Card className="p-6">
+                  <h2 className="text-sm font-semibold text-slate-900">
                     Audit Timeline
                   </h2>
                   <ol className="mt-5 space-y-5 border-l border-slate-200 pl-4">
                     {history.map((entry) => (
                       <li key={entry._id} className="relative">
-                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-indigo-600 ring-4 ring-white" />
+                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-700 ring-4 ring-white" />
                         <p className="text-sm font-medium capitalize text-slate-900">
                           {entry.action.replace("_", " ")}
                           {entry.updatedBy?.name
@@ -255,7 +249,7 @@ export default function AdminComplaintDetailsPage() {
                             {entry.note}
                           </p>
                         )}
-                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400 tabular-nums">
                           <Clock className="h-3 w-3" />
                           <span>
                             {new Date(entry.createdAt).toLocaleString()}
@@ -264,116 +258,114 @@ export default function AdminComplaintDetailsPage() {
                       </li>
                     ))}
                   </ol>
-                </div>
+                </Card>
               </div>
 
-              <div className="space-y-6">
-                <form
-                  onSubmit={handleAssignStaff}
-                  className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4"
-                >
-                  <h2 className="text-base font-semibold text-slate-900">
-                    Assign Maintenance Staff
-                  </h2>
-                  <select
-                    value={selectedStaffId}
-                    onChange={(e) => setSelectedStaffId(e.target.value)}
-                    disabled={!canReviewOrAssign || isSaving}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
-                  >
-                    <option value="">Select active staff member...</option>
-                    {staffList.map((member) => (
-                      <option key={member._id} value={member._id}>
-                        {member.name}
-                        {member.department ? ` (${member.department})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={
-                      !canReviewOrAssign || !selectedStaffId || isSaving
-                    }
-                    className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {isSaving ? "Saving..." : "Assign Staff"}
-                  </button>
-                </form>
+              <div className="space-y-5">
+                <Card className="p-5">
+                  <form onSubmit={handleAssignStaff} className="space-y-3.5">
+                    <Select
+                      id="staffId"
+                      label="Assign Maintenance Staff"
+                      value={selectedStaffId}
+                      onChange={(e) => setSelectedStaffId(e.target.value)}
+                      disabled={!canReviewOrAssign || isSaving}
+                    >
+                      <option value="">Select active staff member...</option>
+                      {staffList.map((member) => (
+                        <option key={member._id} value={member._id}>
+                          {member.name}
+                          {member.department ? ` (${member.department})` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="submit"
+                      disabled={
+                        !canReviewOrAssign || !selectedStaffId || isSaving
+                      }
+                      className="w-full"
+                    >
+                      {isSaving ? "Saving..." : "Assign Staff"}
+                    </Button>
+                  </form>
+                </Card>
 
-                <form
-                  onSubmit={handlePriorityUpdate}
-                  className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4"
-                >
-                  <h2 className="text-base font-semibold text-slate-900">
-                    Priority Level
-                  </h2>
-                  <select
-                    value={selectedPriority}
-                    onChange={(e) => setSelectedPriority(e.target.value)}
-                    disabled={isSaving}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
-                  >
-                    {COMPLAINT_PRIORITIES.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    Update Priority
-                  </button>
-                </form>
+                <Card className="p-5">
+                  <form onSubmit={handlePriorityUpdate} className="space-y-3.5">
+                    <Select
+                      id="priority"
+                      label="Priority Level"
+                      value={selectedPriority}
+                      onChange={(e) => setSelectedPriority(e.target.value)}
+                      disabled={isSaving}
+                    >
+                      {COMPLAINT_PRIORITIES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      disabled={isSaving}
+                      className="w-full"
+                    >
+                      Update Priority
+                    </Button>
+                  </form>
+                </Card>
 
                 {["pending", "reopened"].includes(complaint.status) && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="space-y-3 p-5">
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Review Decision
                     </h2>
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
+                        variant="success"
                         disabled={isSaving}
                         onClick={() => handleReview("approve")}
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                        className="flex-1"
                       >
                         <CheckCircle2 className="h-4 w-4" />
                         Approve
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="dangerSoft"
                         disabled={isSaving}
                         onClick={() => setShowRejectBox((v) => !v)}
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+                        className="flex-1"
                       >
                         <XCircle className="h-4 w-4" />
                         Reject
-                      </button>
+                      </Button>
                     </div>
 
                     {showRejectBox && (
-                      <div className="space-y-2 pt-2">
-                        <textarea
+                      <div className="space-y-2.5 pt-2">
+                        <Textarea
+                          id="rejectNote"
                           rows={3}
                           value={rejectNote}
                           onChange={(e) => setRejectNote(e.target.value)}
                           placeholder="Provide a reason for rejecting this complaint..."
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none"
                         />
-                        <button
+                        <Button
                           type="button"
+                          variant="danger"
                           disabled={isSaving || rejectNote.trim().length < 5}
                           onClick={() => handleReview("reject")}
-                          className="w-full rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
+                          className="w-full"
                         >
                           Confirm Rejection
-                        </button>
+                        </Button>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 )}
               </div>
             </div>

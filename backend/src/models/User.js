@@ -37,9 +37,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    employeeId: {
+      type: String,
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+    passwordResetTokenHash: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      select: false,
     },
   },
   {
@@ -47,6 +63,8 @@ const userSchema = new mongoose.Schema(
     toJSON: {
       transform(_doc, ret) {
         delete ret.password;
+        delete ret.passwordResetTokenHash;
+        delete ret.passwordResetExpiresAt;
         delete ret.__v;
         return ret;
       },

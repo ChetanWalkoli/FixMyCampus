@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -14,6 +13,10 @@ import {
 } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { PriorityBadge, StatusBadge } from "../../components/common/StatusBadge";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Alert, LoadingRows } from "../../components/ui/Feedback";
+import { Textarea } from "../../components/ui/FormFields";
 import {
   getStaffComplaintById,
   updateStaffTaskStatus,
@@ -133,7 +136,7 @@ export default function StaffTaskDetailsPage() {
       actions={
         <Link
           to="/staff/tasks"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to My Tasks
@@ -141,30 +144,21 @@ export default function StaffTaskDetailsPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-          Loading task details...
-        </div>
+        <Card>
+          <LoadingRows rows={4} />
+        </Card>
       ) : (
         <>
-          {error && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {feedback && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{feedback}</span>
-            </div>
-          )}
+          <Alert className="mb-5">{error}</Alert>
+          <Alert variant="success" className="mb-5">
+            {feedback}
+          </Alert>
 
           {complaint && (
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                  <div className="flex flex-wrap items-center gap-2.5">
+                <Card className="p-6">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={complaint.status} />
                     <PriorityBadge priority={complaint.priority} />
                     <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-700">
@@ -172,10 +166,10 @@ export default function StaffTaskDetailsPage() {
                     </span>
                   </div>
 
-                  <h2 className="mt-4 text-base font-semibold text-slate-900">
+                  <h2 className="mt-4 text-sm font-semibold text-slate-900">
                     Issue Description
                   </h2>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                  <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-600">
                     {complaint.description}
                   </p>
 
@@ -208,14 +202,14 @@ export default function StaffTaskDetailsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
 
                 {complaint.images?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Reported Issue Photos
                     </h2>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {complaint.images.map((img) => (
                         <a
                           key={img.publicId}
@@ -232,15 +226,15 @@ export default function StaffTaskDetailsPage() {
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
                 {complaint.resolutionProof?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                    <h2 className="text-base font-semibold text-slate-900">
+                  <Card className="p-6">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       Uploaded Resolution Proof
                     </h2>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {complaint.resolutionProof.map((img) => (
                         <a
                           key={img.publicId}
@@ -257,17 +251,17 @@ export default function StaffTaskDetailsPage() {
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                  <h2 className="text-base font-semibold text-slate-900">
+                <Card className="p-6">
+                  <h2 className="text-sm font-semibold text-slate-900">
                     Work Timeline
                   </h2>
                   <ol className="mt-5 space-y-5 border-l border-slate-200 pl-4">
                     {history.map((entry) => (
                       <li key={entry._id} className="relative">
-                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-indigo-600 ring-4 ring-white" />
+                        <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-700 ring-4 ring-white" />
                         <p className="text-sm font-medium capitalize text-slate-900">
                           {entry.action.replace("_", " ")}
                           {entry.updatedBy?.name
@@ -279,7 +273,7 @@ export default function StaffTaskDetailsPage() {
                             {entry.note}
                           </p>
                         )}
-                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-1 text-xs text-slate-400 tabular-nums">
                           <Clock className="h-3 w-3" />
                           <span>
                             {new Date(entry.createdAt).toLocaleString()}
@@ -288,95 +282,94 @@ export default function StaffTaskDetailsPage() {
                       </li>
                     ))}
                   </ol>
-                </div>
+                </Card>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {["assigned", "in_progress"].includes(complaint.status) && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-                    <h2 className="text-base font-semibold text-slate-900">
-                      Update Work Status
-                    </h2>
-                    <textarea
+                  <Card className="space-y-4 p-5">
+                    <Textarea
+                      id="workNote"
+                      label="Update Work Status"
                       rows={3}
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Add maintenance notes or resolution summary..."
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
                     />
                     {complaint.status === "assigned" ? (
-                      <button
+                      <Button
                         type="button"
                         disabled={isUpdating}
                         onClick={() => handleStatusUpdate("in_progress")}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                        className="w-full"
                       >
                         <Play className="h-4 w-4" />
                         {isUpdating ? "Updating..." : "Start Repair Work"}
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         type="button"
+                        variant="success"
                         disabled={isUpdating}
                         onClick={() => handleStatusUpdate("resolved")}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                        className="w-full"
                       >
                         <CheckCircle2 className="h-4 w-4" />
                         {isUpdating ? "Updating..." : "Mark as Resolved"}
-                      </button>
+                      </Button>
                     )}
-                  </div>
+                  </Card>
                 )}
 
                 {["in_progress", "resolved"].includes(complaint.status) && (
-                  <form
-                    onSubmit={handleProofUpload}
-                    className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4"
-                  >
-                    <h2 className="text-base font-semibold text-slate-900">
-                      Upload Resolution Proof
-                    </h2>
+                  <Card className="p-5">
+                    <form onSubmit={handleProofUpload} className="space-y-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Upload Resolution Proof
+                      </h2>
 
-                    {proofPreview ? (
-                      <div className="relative inline-block">
-                        <img
-                          src={proofPreview}
-                          alt="Proof preview"
-                          className="h-36 w-full rounded-lg border border-slate-200 object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={clearProofSelection}
-                          aria-label="Remove proof image"
-                          className="absolute -right-2 -top-2 rounded-full bg-slate-900 p-1 text-white shadow"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-5 text-center transition hover:border-indigo-400">
-                        <ImagePlus className="h-6 w-6 text-slate-400" />
-                        <span className="mt-2 text-xs font-medium text-slate-700">
-                          Select proof photo (max 5 MB)
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={handleProofSelect}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
+                      {proofPreview ? (
+                        <div className="relative inline-block w-full">
+                          <img
+                            src={proofPreview}
+                            alt="Proof preview"
+                            className="h-36 w-full rounded-lg border border-slate-200 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={clearProofSelection}
+                            aria-label="Remove proof image"
+                            className="absolute -right-2 -top-2 rounded-full bg-slate-900 p-1 text-white shadow"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-4 py-5 text-center transition-colors hover:border-blue-400">
+                          <ImagePlus className="h-5 w-5 text-slate-400" />
+                          <span className="mt-2 text-xs font-medium text-slate-700">
+                            Select proof photo (max 5 MB)
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleProofSelect}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
 
-                    <button
-                      type="submit"
-                      disabled={!proofFile || isUploading}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {isUploading ? "Uploading..." : "Upload Proof"}
-                    </button>
-                  </form>
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        disabled={!proofFile || isUploading}
+                        className="w-full"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {isUploading ? "Uploading..." : "Upload Proof"}
+                      </Button>
+                    </form>
+                  </Card>
                 )}
               </div>
             </div>

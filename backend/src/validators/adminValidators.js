@@ -62,3 +62,41 @@ export const updateStaffSchema = z
       data.isActive !== undefined,
     { message: "At least one field must be provided to update" }
   );
+
+export const inviteUserSchema = z.object({
+  name: z
+    .string({ required_error: "Full name is required" })
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(80),
+  email: z
+    .string({ required_error: "Email is required" })
+    .trim()
+    .toLowerCase()
+    .email("Please provide a valid email address"),
+  role: z.enum(["admin", "staff"], {
+    required_error: "Role must be admin or staff",
+  }),
+  department: z.string().trim().max(80).optional(),
+  employeeId: z.string().trim().max(40).optional(),
+});
+
+export const updateUserSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80).optional(),
+    department: z.string().trim().max(80).optional(),
+    employeeId: z.string().trim().max(40).optional(),
+    role: z.enum(["student", "admin", "staff"]).optional(),
+  })
+  .refine(
+    (data) =>
+      data.name !== undefined ||
+      data.department !== undefined ||
+      data.employeeId !== undefined ||
+      data.role !== undefined,
+    { message: "At least one field must be provided to update" }
+  );
+
+export const updateUserStatusSchema = z.object({
+  isActive: z.boolean({ required_error: "isActive boolean is required" }),
+});

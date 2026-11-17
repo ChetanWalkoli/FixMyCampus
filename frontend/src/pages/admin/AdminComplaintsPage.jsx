@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Search,
+} from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { PriorityBadge, StatusBadge } from "../../components/common/StatusBadge";
+import { Card } from "../../components/ui/Card";
+import { Alert, EmptyState, LoadingRows } from "../../components/ui/Feedback";
+import { Select } from "../../components/ui/FormFields";
 import {
   COMPLAINT_CATEGORIES,
   COMPLAINT_PRIORITIES,
@@ -74,146 +82,179 @@ export default function AdminComplaintsPage() {
       title="All Campus Complaints"
       subtitle="Filter, inspect, prioritize, and assign maintenance requests."
     >
-      <div className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs sm:grid-cols-2 lg:grid-cols-5">
-        <div className="relative lg:col-span-2">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search ID, title, or location..."
-            className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
-          />
-        </div>
+      <Card className="mb-5 p-3.5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="relative lg:col-span-2">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              aria-label="Search complaints"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search ID, title, or location..."
+              className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-3 focus:ring-blue-600/15"
+            />
+          </div>
 
-        <select
-          value={statusFilter}
-          onChange={handleFilterChange(setStatusFilter)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
-        >
-          <option value="all">All Statuses</option>
-          {Object.entries(STATUS_META).map(([key, meta]) => (
-            <option key={key} value={key}>
-              {meta.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={priorityFilter}
-          onChange={handleFilterChange(setPriorityFilter)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
-        >
-          <option value="all">All Priorities</option>
-          {COMPLAINT_PRIORITIES.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={categoryFilter}
-            onChange={handleFilterChange(setCategoryFilter)}
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+          <Select
+            aria-label="Filter by status"
+            value={statusFilter}
+            onChange={handleFilterChange(setStatusFilter)}
           >
-            <option value="all">Category</option>
-            {COMPLAINT_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
+            <option value="all">All Statuses</option>
+            {Object.entries(STATUS_META).map(([key, meta]) => (
+              <option key={key} value={key}>
+                {meta.label}
               </option>
             ))}
-          </select>
+          </Select>
 
-          <select
-            value={sortOrder}
-            onChange={handleFilterChange(setSortOrder)}
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+          <Select
+            aria-label="Filter by priority"
+            value={priorityFilter}
+            onChange={handleFilterChange(setPriorityFilter)}
           >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-          </select>
-        </div>
-      </div>
+            <option value="all">All Priorities</option>
+            {COMPLAINT_PRIORITIES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </Select>
 
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              aria-label="Filter by category"
+              value={categoryFilter}
+              onChange={handleFilterChange(setCategoryFilter)}
+            >
+              <option value="all">Category</option>
+              {COMPLAINT_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </Select>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+            <Select
+              aria-label="Sort order"
+              value={sortOrder}
+              onChange={handleFilterChange(setSortOrder)}
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      <Alert className="mb-5">{error}</Alert>
+
+      <Card className="overflow-hidden">
         {isLoading ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            Loading complaints...
-          </div>
+          <LoadingRows rows={6} />
         ) : complaints.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            No complaints match the current filters.
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="No matching complaints"
+            description="No complaints match the current search or filter criteria."
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-6 py-3.5">ID &amp; Issue</th>
-                  <th className="px-6 py-3.5">Student</th>
-                  <th className="px-6 py-3.5">Location</th>
-                  <th className="px-6 py-3.5">Priority</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5">Assigned To</th>
-                  <th className="px-6 py-3.5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {complaints.map((c) => (
-                  <tr key={c._id} className="hover:bg-slate-50/70">
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-xs font-semibold text-indigo-600">
+          <>
+            {/* Mobile Card List */}
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {complaints.map((c) => (
+                <li key={c._id} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-mono text-xs font-semibold text-blue-700">
                         {c.complaintId}
                       </span>
-                      <p className="mt-0.5 font-medium text-slate-900">
+                      <p className="mt-0.5 text-sm font-medium text-slate-900">
                         {c.title}
                       </p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {c.submittedBy?.name || "Student"}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {c.location?.block}
-                      {c.location?.room ? `, ${c.location.room}` : ""}
-                    </td>
-                    <td className="px-6 py-4">
-                      <PriorityBadge priority={c.priority} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={c.status} />
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {c.assignedTo?.name || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link
-                        to={`/admin/complaints/${c._id}`}
-                        className="font-semibold text-indigo-600 hover:text-indigo-700"
-                      >
-                        Manage
-                      </Link>
-                    </td>
+                    </div>
+                    <StatusBadge status={c.status} />
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {c.submittedBy?.name || "Student"} · {c.location?.block}
+                    {c.location?.room ? `, ${c.location.room}` : ""}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <PriorityBadge priority={c.priority} />
+                    <Link
+                      to={`/admin/complaints/${c._id}`}
+                      className="text-xs font-semibold text-blue-700 hover:text-blue-800"
+                    >
+                      Manage →
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop Table */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-5 py-3">ID &amp; Issue</th>
+                    <th className="px-5 py-3">Student</th>
+                    <th className="px-5 py-3">Location</th>
+                    <th className="px-5 py-3">Priority</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3">Assigned To</th>
+                    <th className="px-5 py-3 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {complaints.map((c) => (
+                    <tr key={c._id} className="hover:bg-slate-50/70">
+                      <td className="px-5 py-3.5">
+                        <span className="font-mono text-xs font-semibold text-blue-700">
+                          {c.complaintId}
+                        </span>
+                        <p className="mt-0.5 font-medium text-slate-900">
+                          {c.title}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-600">
+                        {c.submittedBy?.name || "Student"}
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-600">
+                        {c.location?.block}
+                        {c.location?.room ? `, ${c.location.room}` : ""}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <PriorityBadge priority={c.priority} />
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-600">
+                        {c.assignedTo?.name || "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <Link
+                          to={`/admin/complaints/${c._id}`}
+                          className="font-semibold text-blue-700 hover:text-blue-800"
+                        >
+                          Manage
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3 text-sm text-slate-600">
+          <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-xs text-slate-600 tabular-nums">
             <span>
               Page {pagination.page} of {pagination.totalPages} (
               {pagination.total} total)
@@ -223,7 +264,7 @@ export default function AdminComplaintsPage() {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-medium hover:bg-slate-50 disabled:opacity-40"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Prev
@@ -234,7 +275,7 @@ export default function AdminComplaintsPage() {
                 onClick={() =>
                   setPage((p) => Math.min(pagination.totalPages, p + 1))
                 }
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-medium hover:bg-slate-50 disabled:opacity-40"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -242,7 +283,7 @@ export default function AdminComplaintsPage() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </DashboardShell>
   );
 }

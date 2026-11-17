@@ -2,6 +2,10 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "../pages/public/HomePage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
+import ActivateAccountPage from "../pages/auth/ActivateAccountPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import ChangePasswordPage from "../pages/common/ChangePasswordPage";
 import StudentDashboardPage from "../pages/student/StudentDashboardPage";
 import MyComplaintsPage from "../pages/student/MyComplaintsPage";
 import NewComplaintPage from "../pages/student/NewComplaintPage";
@@ -24,6 +28,9 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/activate-account" element={<ActivateAccountPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<PublicOnlyRoute />}>
           <Route path="/login" element={<LoginPage />} />
@@ -67,6 +74,7 @@ export default function AppRouter() {
           }
         >
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

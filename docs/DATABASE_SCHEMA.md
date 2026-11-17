@@ -10,8 +10,11 @@ Database Name: `fixmycampus` (MongoDB Atlas)
 
 ### 1. `Users`
 - **Purpose:** Stores all registered accounts across the three platform roles (`student`, `admin`, `staff`).
-- **Intended Data:** Name, unique email, hashed password, role, department, student ID (for students), active status, and timestamps.
-- **Introduced In:** Phase 1 (Authentication & Role-Based Access).
+- **Key Fields:** Name, unique email, hashed password, role, department, `studentId`, `employeeId`, `isActive`, `tokenVersion` (for session invalidation on password reset/change), `passwordResetTokenHash`, `passwordResetExpiresAt`, and timestamps.
+
+### 2. `Invitations`
+- **Purpose:** Stores single-use, time-limited Staff and Admin account invitations before activation.
+- **Key Fields:** `name`, `email`, `role` (`admin` | `staff`), `department`, `employeeId`, `tokenHash` (SHA-256, unique), `status` (`pending` | `accepted` | `revoked`), `invitedBy` (`User` ref), `expiresAt`, `acceptedAt`, and timestamps.
 
 ### 2. `Complaints`
 - **Purpose:** Core collection storing campus maintenance complaints and their lifecycle state.

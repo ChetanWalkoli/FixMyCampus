@@ -43,7 +43,15 @@ This guide covers deploying **FixMyCampus** using:
    CLOUDINARY_CLOUD_NAME=<your_cloud_name>
    CLOUDINARY_API_KEY=<your_api_key>
    CLOUDINARY_API_SECRET=<your_api_secret>
+   SMTP_HOST=<smtp_host>
+   SMTP_PORT=587
+   SMTP_USER=<smtp_user>
+   SMTP_PASSWORD=<smtp_password>
+   SMTP_FROM="FixMyCampus <no-reply@yourdomain.edu>"
+   INVITATION_EXPIRES_HOURS=24
+   PASSWORD_RESET_EXPIRES_MINUTES=30
    ```
+4. After deploying, run `npm run bootstrap:admin` once against your production database to create the initial Administrator account, then invite Staff and additional Admins from the Admin Dashboard.
 4. Deploy and verify:
    ```text
    GET https://<your-render-service>.onrender.com/api/v1/health

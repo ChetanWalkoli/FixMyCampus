@@ -19,3 +19,23 @@ export const logoutUser = async () => {
   const response = await api.post("/auth/logout");
   return response.data;
 };
+
+export const activateAccount = async (payload) => {
+  const response = await api.post("/auth/activate-account", payload);
+  return response.data;
+};
+
+export const forgotPassword = async (payload) => {
+  const response = await api.post("/auth/forgot-password", payload);
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await api.post("/auth/reset-password", payload);
+  return response.data;
+};
+
+export const changePassword = async (payload) => {
+  const response = await api.patch("/auth/change-password", payload);
+  return response.data;
+};

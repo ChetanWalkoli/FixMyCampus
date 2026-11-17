@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, AlertCircle, LogIn } from "lucide-react";
+import { Building2, LogIn } from "lucide-react";
 import { getDashboardPathByRole, useAuth } from "../../context/AuthContext";
+import { Alert } from "../../components/ui/Feedback";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/FormFields";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -37,93 +41,77 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4 py-12">
+    <div className="flex min-h-screen flex-col justify-center bg-slate-50 px-4 py-12">
       <div className="mx-auto w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
-            <Building2 className="h-5 w-5" />
+        <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white">
+            <Building2 className="h-4 w-4" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900">
+          <span className="text-lg font-semibold tracking-tight text-slate-900">
             FixMyCampus
           </span>
         </Link>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xs">
-          <h1 className="text-xl font-bold text-slate-900">
+        <Card className="p-6 sm:p-8">
+          <h1 className="text-lg font-semibold text-slate-900">
             Sign in to your account
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-slate-500">
             Access your Student, Admin, or Maintenance Staff portal.
           </p>
 
-          {error && (
-            <div className="mt-5 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+          <Alert className="mt-5">{error}</Alert>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-700"
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              label="Email address"
+              required
+              autoComplete="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@college.edu"
+            />
+
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              label="Password"
+              required
+              autoComplete="current-password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+            />
+
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-blue-700 hover:text-blue-800"
               >
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="you@college.edu"
-                className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
+                Forgot password?
+              </Link>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={isSubmitting} className="w-full">
               <LogIn className="h-4 w-4" />
               {isSubmitting ? "Signing in..." : "Sign in"}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-600">
             New student?{" "}
             <Link
               to="/register"
-              className="font-semibold text-indigo-600 hover:text-indigo-700"
+              className="font-semibold text-blue-700 hover:text-blue-800"
             >
               Create an account
             </Link>
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   );

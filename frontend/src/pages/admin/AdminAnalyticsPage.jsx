@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  AlertCircle,
-  BarChart3,
-  CheckCircle2,
-  Clock,
-  Timer,
-} from "lucide-react";
+import { BarChart3, CheckCircle2, Clock, Timer } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -22,16 +16,18 @@ import {
   YAxis,
 } from "recharts";
 import DashboardShell from "../../components/layout/DashboardShell";
+import { Card } from "../../components/ui/Card";
+import { Alert, LoadingRows, StatCard } from "../../components/ui/Feedback";
 import { getAdminAnalytics } from "../../services/adminService";
 
 const PIE_COLORS = [
-  "#4f46e5",
-  "#f59e0b",
-  "#10b981",
-  "#0ea5e9",
+  "#1d4ed8",
+  "#d97706",
+  "#059669",
+  "#0284c7",
   "#64748b",
-  "#ef4444",
-  "#f97316",
+  "#dc2626",
+  "#ea580c",
 ];
 
 export default function AdminAnalyticsPage() {
@@ -63,39 +59,10 @@ export default function AdminAnalyticsPage() {
     loadAnalytics();
   }, [loadAnalytics]);
 
-  const kpiCards = analytics
-    ? [
-        {
-          label: "Total Complaints",
-          value: analytics.total,
-          icon: BarChart3,
-          tone: "text-indigo-700 bg-indigo-50",
-        },
-        {
-          label: "Pending / Reopened",
-          value: analytics.pending + (analytics.reopened || 0),
-          icon: Clock,
-          tone: "text-amber-700 bg-amber-50",
-        },
-        {
-          label: "Resolved / Closed",
-          value: analytics.resolved + (analytics.closed || 0),
-          icon: CheckCircle2,
-          tone: "text-emerald-700 bg-emerald-50",
-        },
-        {
-          label: "Avg Resolution Time",
-          value: `${analytics.averageResolutionHours} hrs`,
-          icon: Timer,
-          tone: "text-sky-700 bg-sky-50",
-        },
-      ]
-    : [];
-
   return (
     <DashboardShell
       title="Analytics & Reporting"
-      subtitle="Monitor campus maintenance volume, category trends, resolution speed, and staff workload."
+      subtitle="Monitor maintenance volume, category trends, resolution speed, and staff workload."
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -103,7 +70,7 @@ export default function AdminAnalyticsPage() {
             aria-label="Start date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
           />
           <span className="text-xs text-slate-500">to</span>
           <input
@@ -111,7 +78,7 @@ export default function AdminAnalyticsPage() {
             aria-label="End date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
           />
           {(startDate || endDate) && (
             <button
@@ -128,46 +95,44 @@ export default function AdminAnalyticsPage() {
         </div>
       }
     >
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <Alert className="mb-5">{error}</Alert>
 
       {isLoading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
-          Loading analytics...
-        </div>
+        <Card>
+          <LoadingRows rows={5} />
+        </Card>
       ) : !analytics ? null : (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {kpiCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <div
-                  key={card.label}
-                  className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      {card.label}
-                    </span>
-                    <div className={`rounded-lg p-2 ${card.tone}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                  </div>
-                  <p className="mt-3 text-2xl font-bold text-slate-900">
-                    {card.value}
-                  </p>
-                </div>
-              );
-            })}
+            <StatCard
+              label="Total Complaints"
+              value={analytics.total}
+              icon={BarChart3}
+              tone="brand"
+            />
+            <StatCard
+              label="Pending / Reopened"
+              value={analytics.pending + (analytics.reopened || 0)}
+              icon={Clock}
+              tone="amber"
+            />
+            <StatCard
+              label="Resolved / Closed"
+              value={analytics.resolved + (analytics.closed || 0)}
+              icon={CheckCircle2}
+              tone="emerald"
+            />
+            <StatCard
+              label="Avg Resolution Time"
+              value={`${analytics.averageResolutionHours} hrs`}
+              icon={Timer}
+              tone="sky"
+            />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-              <h2 className="text-base font-semibold text-slate-900">
+            <Card className="p-6">
+              <h2 className="text-sm font-semibold text-slate-900">
                 Complaints by Category
               </h2>
               {analytics.categoryBreakdown.length === 0 ? (
@@ -182,15 +147,19 @@ export default function AdminAnalyticsPage() {
                       <XAxis dataKey="category" tick={{ fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                       <Tooltip />
-                      <Bar dataKey="count" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                      <Bar
+                        dataKey="count"
+                        fill="#1d4ed8"
+                        radius={[6, 6, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+            </Card>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-              <h2 className="text-base font-semibold text-slate-900">
+            <Card className="p-6">
+              <h2 className="text-sm font-semibold text-slate-900">
                 Complaints by Status
               </h2>
               {analytics.statusBreakdown.length === 0 ? (
@@ -223,12 +192,12 @@ export default function AdminAnalyticsPage() {
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+            </Card>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-              <h2 className="text-base font-semibold text-slate-900">
+            <Card className="p-6">
+              <h2 className="text-sm font-semibold text-slate-900">
                 Monthly Complaint Trend
               </h2>
               {analytics.monthlyTrends.length === 0 ? (
@@ -246,17 +215,17 @@ export default function AdminAnalyticsPage() {
                       <Line
                         type="monotone"
                         dataKey="count"
-                        stroke="#4f46e5"
+                        stroke="#1d4ed8"
                         strokeWidth={2.5}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+            </Card>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-              <h2 className="text-base font-semibold text-slate-900">
+            <Card className="p-6">
+              <h2 className="text-sm font-semibold text-slate-900">
                 Staff Workload
               </h2>
               {analytics.staffWorkload.length === 0 ? (
@@ -275,7 +244,7 @@ export default function AdminAnalyticsPage() {
                         <th className="px-4 py-2.5 text-right">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 tabular-nums">
                       {analytics.staffWorkload.map((row) => (
                         <tr key={row.staffId}>
                           <td className="px-4 py-3 font-medium text-slate-900">
@@ -284,10 +253,10 @@ export default function AdminAnalyticsPage() {
                           <td className="px-4 py-3 text-slate-600">
                             {row.department}
                           </td>
-                          <td className="px-4 py-3 text-right text-amber-700 font-medium">
+                          <td className="px-4 py-3 text-right font-medium text-amber-700">
                             {row.active}
                           </td>
-                          <td className="px-4 py-3 text-right text-emerald-700 font-medium">
+                          <td className="px-4 py-3 text-right font-medium text-emerald-700">
                             {row.completed}
                           </td>
                           <td className="px-4 py-3 text-right font-semibold text-slate-900">
@@ -299,7 +268,7 @@ export default function AdminAnalyticsPage() {
                   </table>
                 </div>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       )}

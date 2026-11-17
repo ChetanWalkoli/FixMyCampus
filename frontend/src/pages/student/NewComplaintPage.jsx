@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ImagePlus, Send, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Send, X } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Feedback";
+import { Input, Select, Textarea } from "../../components/ui/FormFields";
 import {
   CAMPUS_BLOCKS,
   COMPLAINT_CATEGORIES,
@@ -103,201 +107,132 @@ export default function NewComplaintPage() {
   return (
     <DashboardShell
       title="Submit New Complaint"
-      subtitle="Report a campus infrastructure or maintenance issue."
+      subtitle="Provide exact location and issue details for faster triage."
       actions={
         <Link
           to="/student/complaints"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to My Complaints
         </Link>
       }
     >
-      <div className="mx-auto max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
-        {error && (
-          <div className="mb-6 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+      <Card className="mx-auto max-w-2xl p-6 sm:p-8">
+        <Alert className="mb-6">{error}</Alert>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Complaint Title
-            </label>
-            <input
-              id="title"
-              name="title"
-              type="text"
-              required
-              minLength={5}
-              maxLength={120}
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="e.g., Ceiling fan not working in Room 204"
-              className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
+          <Input
+            id="title"
+            name="title"
+            type="text"
+            label="Complaint Title"
+            required
+            minLength={5}
+            maxLength={120}
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="e.g., Ceiling fan not working in Room 204"
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Category
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              >
-                {COMPLAINT_CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="category"
+              name="category"
+              label="Category"
+              value={formData.category}
+              onChange={handleChange}
+            >
+              {COMPLAINT_CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </Select>
 
-            <div>
-              <label
-                htmlFor="priority"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Priority
-              </label>
-              <select
-                id="priority"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              >
-                {COMPLAINT_PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="priority"
+              name="priority"
+              label="Priority"
+              value={formData.priority}
+              onChange={handleChange}
+            >
+              {COMPLAINT_PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </Select>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+          <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/70 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Campus Location
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label
-                  htmlFor="block"
-                  className="block text-xs font-medium text-slate-700"
-                >
-                  Building / Block
-                </label>
-                <select
-                  id="block"
-                  name="block"
-                  value={formData.block}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
-                >
-                  {CAMPUS_BLOCKS.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="floor"
-                  className="block text-xs font-medium text-slate-700"
-                >
-                  Floor
-                </label>
-                <input
-                  id="floor"
-                  name="floor"
-                  type="text"
-                  value={formData.floor}
-                  onChange={handleChange}
-                  placeholder="e.g., 2nd Floor"
-                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="room"
-                  className="block text-xs font-medium text-slate-700"
-                >
-                  Room / Area
-                </label>
-                <input
-                  id="room"
-                  name="room"
-                  type="text"
-                  value={formData.room}
-                  onChange={handleChange}
-                  placeholder="e.g., Room 204"
-                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="details"
-                className="block text-xs font-medium text-slate-700"
-              >
-                Landmark / Additional Location Details (optional)
-              </label>
-              <input
-                id="details"
-                name="details"
-                type="text"
-                value={formData.details}
+              <Select
+                id="block"
+                name="block"
+                label="Building / Block"
+                value={formData.block}
                 onChange={handleChange}
-                placeholder="e.g., Near north staircase"
-                className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+              >
+                {CAMPUS_BLOCKS.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </Select>
+
+              <Input
+                id="floor"
+                name="floor"
+                type="text"
+                label="Floor"
+                value={formData.floor}
+                onChange={handleChange}
+                placeholder="e.g., 2nd Floor"
+              />
+
+              <Input
+                id="room"
+                name="room"
+                type="text"
+                label="Room / Area"
+                value={formData.room}
+                onChange={handleChange}
+                placeholder="e.g., Room 204"
               />
             </div>
-          </div>
 
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              required
-              minLength={10}
-              maxLength={2000}
-              value={formData.description}
+            <Input
+              id="details"
+              name="details"
+              type="text"
+              label="Landmark / Additional Details (optional)"
+              value={formData.details}
               onChange={handleChange}
-              placeholder="Describe the issue clearly so maintenance staff can diagnose it quickly..."
-              className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="e.g., Near north staircase"
             />
           </div>
 
+          <Textarea
+            id="description"
+            name="description"
+            rows={4}
+            label="Description"
+            required
+            minLength={10}
+            maxLength={2000}
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Describe the issue clearly so maintenance staff can diagnose it quickly..."
+          />
+
           <div>
-            <label className="block text-sm font-medium text-slate-700">
+            <span className="mb-1.5 block text-xs font-medium text-slate-700">
               Photo Evidence (optional, JPEG/PNG/WebP up to 5 MB)
-            </label>
+            </span>
 
             {imagePreview ? (
               <div className="relative mt-2 inline-block">
@@ -316,10 +251,10 @@ export default function NewComplaintPage() {
                 </button>
               </div>
             ) : (
-              <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-6 py-6 text-center transition hover:border-indigo-400 hover:bg-indigo-50/30">
-                <ImagePlus className="h-6 w-6 text-slate-400" />
+              <label className="mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-6 py-6 text-center transition-colors hover:border-blue-400 hover:bg-blue-50/30">
+                <ImagePlus className="h-5 w-5 text-slate-400" />
                 <span className="mt-2 text-sm font-medium text-slate-700">
-                  Click to attach a photo
+                  Attach a photo
                 </span>
                 <span className="mt-0.5 text-xs text-slate-500">
                   JPEG, PNG, or WebP (max 5 MB)
@@ -334,24 +269,20 @@ export default function NewComplaintPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Link
               to="/student"
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               Cancel
             </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={isSubmitting}>
               <Send className="h-4 w-4" />
               {isSubmitting ? "Submitting..." : "Submit Complaint"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </DashboardShell>
   );
 }

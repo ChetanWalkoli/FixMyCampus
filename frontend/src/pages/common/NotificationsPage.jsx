@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, Bell, CheckCheck, Circle } from "lucide-react";
+import { Bell, CheckCheck, Circle } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Alert, EmptyState, LoadingRows } from "../../components/ui/Feedback";
 import { useAuth } from "../../context/AuthContext";
 import {
   getNotifications,
@@ -52,9 +55,7 @@ export default function NotificationsPage() {
       await markAllNotificationsRead();
       await loadNotifications();
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to mark all as read."
-      );
+      setError(err.response?.data?.message || "Unable to mark all as read.");
     }
   };
 
@@ -70,42 +71,32 @@ export default function NotificationsPage() {
   return (
     <DashboardShell
       title="Notifications"
-      subtitle="Stay updated on complaint assignments, status changes, and resolutions."
+      subtitle="Updates on complaint assignments, status changes, and resolutions."
       actions={
         unreadCount > 0 && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             <CheckCheck className="h-4 w-4" />
             Mark all as read
-          </button>
+          </Button>
         )
       }
     >
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <Alert className="mb-5">{error}</Alert>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-xs">
+      <Card>
         {isLoading ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            Loading notifications...
-          </div>
+          <LoadingRows rows={4} />
         ) : notifications.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <Bell className="mx-auto h-8 w-8 text-slate-300" />
-            <p className="mt-3 text-sm font-medium text-slate-900">
-              You are all caught up
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              No notifications yet.
-            </p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="You are all caught up"
+            description="No notifications yet."
+          />
         ) : (
           <ul className="divide-y divide-slate-100">
             {notifications.map((item) => {
@@ -113,8 +104,8 @@ export default function NotificationsPage() {
               return (
                 <li
                   key={item._id}
-                  className={`flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between ${
-                    item.isRead ? "bg-white" : "bg-indigo-50/40"
+                  className={`flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between ${
+                    item.isRead ? "bg-white" : "bg-blue-50/40"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -122,7 +113,7 @@ export default function NotificationsPage() {
                       className={`mt-1.5 h-2.5 w-2.5 shrink-0 ${
                         item.isRead
                           ? "fill-slate-200 text-slate-200"
-                          : "fill-indigo-600 text-indigo-600"
+                          : "fill-blue-700 text-blue-700"
                       }`}
                     />
                     <div>
@@ -132,7 +123,7 @@ export default function NotificationsPage() {
                       <p className="mt-0.5 text-sm text-slate-600">
                         {item.message}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-400 tabular-nums">
                         {new Date(item.createdAt).toLocaleString()}
                       </p>
                     </div>
@@ -142,19 +133,20 @@ export default function NotificationsPage() {
                     {link && (
                       <Link
                         to={link}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                        className="text-xs font-semibold text-blue-700 hover:text-blue-800"
                       >
                         View
                       </Link>
                     )}
                     {!item.isRead && (
-                      <button
+                      <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleMarkRead(item._id)}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                       >
                         Mark read
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </li>
@@ -162,7 +154,7 @@ export default function NotificationsPage() {
             })}
           </ul>
         )}
-      </div>
+      </Card>
     </DashboardShell>
   );
 }

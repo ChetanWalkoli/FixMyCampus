@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { History } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { StatusBadge } from "../../components/common/StatusBadge";
+import { Card } from "../../components/ui/Card";
+import { Alert, EmptyState, LoadingRows } from "../../components/ui/Feedback";
 import { getStaffWorkHistory } from "../../services/staffService";
 
 export default function StaffHistoryPage() {
@@ -39,40 +41,35 @@ export default function StaffHistoryPage() {
       title="Completed Work History"
       subtitle="Review previously resolved maintenance tasks."
     >
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <Alert className="mb-5">{error}</Alert>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-xs">
+      <Card>
         {isLoading ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            Loading work history...
-          </div>
+          <LoadingRows rows={4} />
         ) : history.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            No completed tasks recorded yet.
-          </div>
+          <EmptyState
+            icon={History}
+            title="No completed tasks yet"
+            description="Tasks you mark as resolved will appear in your work history."
+          />
         ) : (
           <ul className="divide-y divide-slate-100">
             {history.map((item) => (
               <li key={item._id}>
                 <Link
                   to={`/staff/tasks/${item._id}`}
-                  className="flex flex-col gap-3 px-6 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 px-5 py-3.5 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono text-xs font-semibold text-indigo-600">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs font-semibold text-blue-700">
                         {item.complaintId}
                       </span>
-                      <span className="text-sm font-semibold text-slate-900">
+                      <span className="truncate text-sm font-medium text-slate-900">
                         {item.title}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-slate-500 tabular-nums">
                       {item.location?.block} · Resolved{" "}
                       {item.resolvedAt
                         ? new Date(item.resolvedAt).toLocaleDateString()
@@ -85,7 +82,7 @@ export default function StaffHistoryPage() {
             ))}
           </ul>
         )}
-      </div>
+      </Card>
     </DashboardShell>
   );
 }

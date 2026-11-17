@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import DashboardShell from "../../components/layout/DashboardShell";
 import { PriorityBadge, StatusBadge } from "../../components/common/StatusBadge";
+import { Card } from "../../components/ui/Card";
+import { Alert, EmptyState, LoadingRows } from "../../components/ui/Feedback";
+import { Select } from "../../components/ui/FormFields";
 import { getStaffComplaints } from "../../services/staffService";
 
 export default function StaffTasksPage() {
@@ -42,58 +45,53 @@ export default function StaffTasksPage() {
       title="My Assigned Tasks"
       subtitle="Manage active maintenance work assigned to you."
       actions={
-        <select
+        <Select
+          aria-label="Filter tasks by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
         >
           <option value="all">All Active</option>
           <option value="assigned">Assigned</option>
           <option value="in_progress">In Progress</option>
-        </select>
+        </Select>
       }
     >
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <Alert className="mb-5">{error}</Alert>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-xs">
+      <Card>
         {isLoading ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            Loading tasks...
-          </div>
+          <LoadingRows rows={5} />
         ) : tasks.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            No tasks found for this filter.
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="No tasks found"
+            description="No active tasks match the selected status filter."
+          />
         ) : (
           <ul className="divide-y divide-slate-100">
             {tasks.map((task) => (
               <li key={task._id}>
                 <Link
                   to={`/staff/tasks/${task._id}`}
-                  className="flex flex-col gap-3 px-6 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 px-5 py-3.5 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono text-xs font-semibold text-indigo-600">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs font-semibold text-blue-700">
                         {task.complaintId}
                       </span>
-                      <span className="text-sm font-semibold text-slate-900">
+                      <span className="truncate text-sm font-medium text-slate-900">
                         {task.title}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs capitalize text-slate-500">
+                    <p className="mt-0.5 text-xs capitalize text-slate-500">
                       {task.category} · {task.location?.block}
                       {task.location?.room
                         ? ` · Room ${task.location.room}`
                         : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <PriorityBadge priority={task.priority} />
                     <StatusBadge status={task.status} />
                   </div>
@@ -102,7 +100,7 @@ export default function StaffTasksPage() {
             ))}
           </ul>
         )}
-      </div>
+      </Card>
     </DashboardShell>
   );
 }

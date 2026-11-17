@@ -13,6 +13,7 @@ export const generateToken = (user) => {
     {
       sub: user._id.toString(),
       role: user.role,
+      tv: user.tokenVersion ?? 0,
     },
     getJwtSecret(),
     {

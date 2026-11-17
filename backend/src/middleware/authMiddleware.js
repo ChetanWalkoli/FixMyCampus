@@ -40,6 +40,13 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
+    if ((decoded.tv ?? 0) !== (user.tokenVersion ?? 0)) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired. Please sign in again.",
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
