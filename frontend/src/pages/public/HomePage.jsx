@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Building2, CheckCircle2, AlertCircle, Wrench } from "lucide-react";
 import api from "../../services/api";
+import { getDashboardPathByRole, useAuth } from "../../context/AuthContext";
 
 export default function HomePage() {
+  const { user, isAuthenticated } = useAuth();
   const [apiStatus, setApiStatus] = useState({
     state: "checking",
     message: "Checking API connection...",
@@ -51,10 +54,35 @@ export default function HomePage() {
             </span>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-            <Wrench className="h-3.5 w-3.5" />
-            Phase 0 · {import.meta.env.MODE}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 sm:inline-flex">
+              <Wrench className="h-3.5 w-3.5" />
+              Phase 1 · {import.meta.env.MODE}
+            </span>
+            {isAuthenticated && user ? (
+              <Link
+                to={getDashboardPathByRole(user.role)}
+                className="rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
