@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   Building2,
   ClipboardList,
+  History,
   LayoutDashboard,
   LogOut,
   PlusCircle,
@@ -28,7 +29,11 @@ const ROLE_NAV_LINKS = {
     { to: "/admin/complaints", label: "All Complaints", icon: ClipboardList },
     { to: "/admin/staff", label: "Staff Management", icon: Users },
   ],
-  staff: [{ to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true }],
+  staff: [
+    { to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/staff/tasks", label: "My Tasks", icon: ClipboardList },
+    { to: "/staff/history", label: "Work History", icon: History },
+  ],
 };
 
 export default function DashboardShell({ title, subtitle, actions, children }) {
