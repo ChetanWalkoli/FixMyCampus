@@ -7,26 +7,7 @@
 
 ---
 
-## 2. Health Endpoint (Phase 0)
-
-### `GET /api/v1/health`
-
-Verifies that the Express API server is running. Does not expose database credentials or sensitive configuration.
-
-**Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "message": "FixMyCampus API is running",
-  "environment": "development"
-}
-```
-
----
-
-## 3. JSON Response Convention
-
-All API endpoints must return a consistent JSON structure.
+## 2. Response & Status Conventions
 
 ### Success Response
 ```json
@@ -45,26 +26,68 @@ All API endpoints must return a consistent JSON structure.
 }
 ```
 
----
-
-## 4. HTTP Status Code Conventions
-
 | Status Code | Meaning |
 | --- | --- |
 | `200` | Successful request |
 | `201` | Resource created |
-| `400` | Invalid input / validation error |
+| `400` | Invalid input / validation error / invalid transition |
 | `401` | Not authenticated |
-| `403` | Insufficient permission / forbidden |
+| `403` | Insufficient permission / ownership violation |
 | `404` | Resource not found |
-| `409` | Duplicate / conflict (e.g., email already exists) |
+| `409` | Duplicate / conflict |
 | `500` | Internal server error |
 
 ---
 
-## 5. Planned Authentication Strategy (Phase 1+)
+## 3. Implemented Endpoints
 
-- Authentication will use **JSON Web Tokens (JWT)** stored in **HTTP-only, Secure (in production), SameSite cookies**.
-- Tokens will **not** be stored in `localStorage`.
-- Frontend Axios requests use `withCredentials: true` and CORS is configured with an explicit origin (`FRONTEND_URL`) and `credentials: true`.
-- Role-based authorization middleware on the backend will enforce permissions for `student`, `admin`, and `staff`.
+### Health
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Public | Verify API server availability |
+
+### Authentication
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | Public | Register a student account (forces `role: "student"`) |
+| `POST` | `/auth/login` | Public | Authenticate user and set HTTP-only JWT cookie |
+| `GET` | `/auth/me` | Authenticated | Return current authenticated user |
+| `POST` | `/auth/logout` | Authenticated | Clear authentication cookie |
+
+### Student Complaints
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/complaints` | Student | Submit complaint (supports `multipart/form-data` `image`) |
+| `GET` | `/complaints/my` | Student | List student's own complaints + summary counts |
+| `GET` | `/complaints/:id` | Student (Owner) | Get complaint details and chronological `ComplaintHistory` |
+| `POST` | `/complaints/:id/feedback` | Student (Owner) | Rate & close (`action: "close"`) or reopen (`action: "reopen"`) resolved complaint |
+
+### Admin Management & Analytics
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/admin/complaints` | Admin | List all complaints (paginated, filterable, searchable) |
+| `GET` | `/admin/complaints/:id` | Admin | Get full complaint details and audit history |
+| `PATCH` | `/admin/complaints/:id/review` | Admin | Approve or reject `pending`/`reopened` complaint |
+| `PATCH` | `/admin/complaints/:id/assign` | Admin | Assign active maintenance staff member |
+| `PATCH` | `/admin/complaints/:id/priority` | Admin | Update complaint priority |
+| `GET` | `/admin/staff` | Admin | List maintenance staff accounts |
+| `POST` | `/admin/staff` | Admin | Create maintenance staff account |
+| `PATCH` | `/admin/staff/:id` | Admin | Update staff details or active status |
+| `POST` | `/admin/users` | Admin | Provision `staff` or `admin` account |
+| `GET` | `/admin/analytics` | Admin | Aggregated counts, resolution time, category/status/monthly trends, staff workload |
+
+### Maintenance Staff
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/staff/complaints` | Staff | List active tasks assigned to logged-in staff |
+| `GET` | `/staff/complaints/:id` | Staff (Assigned) | Get assigned task details and history |
+| `PATCH` | `/staff/complaints/:id/status` | Staff (Assigned) | Transition `assigned -> in_progress -> resolved` |
+| `POST` | `/staff/complaints/:id/proof` | Staff (Assigned) | Upload resolution proof photograph (`multipart/form-data`) |
+| `GET` | `/staff/history` | Staff | List completed (`resolved` / `closed`) tasks |
+
+### Notifications
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/notifications` | Authenticated | List user's notifications and `unreadCount` |
+| `PATCH` | `/notifications/:id/read` | Authenticated (Recipient) | Mark notification as read |
+| `PATCH` | `/notifications/read-all` | Authenticated | Mark all notifications as read |

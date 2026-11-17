@@ -6,55 +6,67 @@ FixMyCampus is a centralized MERN-stack platform for reporting, assigning, track
 
 ---
 
+## Key Features
+
+- **Authentication & RBAC:** HTTP-only JWT cookie authentication (`bcrypt` password hashing, `student`, `admin`, and `staff` roles, protected routes).
+- **Student Portal:** Submit complaints with optional photo evidence (Cloudinary), unique `FMC-XXXX` tracking IDs, searchable complaint list, status timeline, in-app notifications, and 1–5 star resolution feedback / reopen flow.
+- **Admin Portal:** Filterable & paginated complaint table, approve/reject with reason, priority updates, active staff assignment, staff directory management, and Recharts analytics dashboard.
+- **Maintenance Staff Portal:** Assigned task queue, strict status transitions (`assigned → in_progress → resolved`), maintenance notes, resolution proof photo uploads, and completed work history.
+
+---
+
 ## Project Structure
 
 ```text
 FixMyCampus/
-├── frontend/       # React + Vite + Tailwind CSS client
-├── backend/        # Node.js + Express + Mongoose API server
-├── docs/           # Architecture, schema, API contract, and roadmap docs
+├── frontend/       # React + Vite + Tailwind CSS + Recharts client
+├── backend/        # Node.js + Express + Mongoose + Zod API server
+├── docs/           # Architecture, schema, API contract, roadmap, deployment guide
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## Prerequisites
+## Local Setup
 
-- **Node.js** (v18+ recommended) & **npm**
-- **MongoDB Atlas** cluster (database: `fixmycampus`)
+### 1. Environment Variables
+- Copy `backend/.env.example` → `backend/.env` and configure `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`, and `CLOUDINARY_*`.
+- Copy `frontend/.env.example` → `frontend/.env` (`VITE_API_URL=http://localhost:5000/api/v1`).
 
----
+### 2. Run in Two PowerShell Terminals
 
-## Environment Setup
-
-1. **Backend environment:**
-   Copy `backend/.env.example` to `backend/.env` and fill in your `MONGODB_URI` and secrets.
-2. **Frontend environment:**
-   Copy `frontend/.env.example` to `frontend/.env` (defaults to `http://localhost:5000/api/v1`).
-
----
-
-## Running Locally (Two PowerShell Terminals)
-
-### Terminal 1 – Backend (`http://localhost:5000`)
+**Terminal 1 – Backend (`http://localhost:5000`):**
 ```powershell
 cd backend
 npm install
 npm run dev
 ```
 
-### Terminal 2 – Frontend (`http://localhost:5173`)
+**Terminal 2 – Frontend (`http://localhost:5173`):**
 ```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-### Health Check
-Verify the API is running:
-```text
-GET http://localhost:5000/api/v1/health
+---
+
+## Testing & Quality Checks
+
+### Backend (Unit/API + Real MongoDB E2E Integration)
+```powershell
+cd backend
+npm test
+npm run lint
+```
+
+### Frontend (Component/Route Tests + Lint + Build)
+```powershell
+cd frontend
+npm test
+npm run lint
+npm run build
 ```
 
 ---
@@ -62,6 +74,7 @@ GET http://localhost:5000/api/v1/health
 ## Documentation
 
 - [Project Architecture](docs/PROJECT_ARCHITECTURE.md)
-- [Database Schema Plan](docs/DATABASE_SCHEMA.md)
+- [Database Schema](docs/DATABASE_SCHEMA.md)
 - [API Contract](docs/API_CONTRACT.md)
 - [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Deployment Guide (Render + Vercel + Atlas)](docs/DEPLOYMENT_GUIDE.md)

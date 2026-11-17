@@ -15,7 +15,7 @@ export const generateComplaintId = async () => {
   const counter = await Counter.findByIdAndUpdate(
     "complaintId",
     { $inc: { seq: 1 } },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
 
   const number = counter.seq < 1001 ? 1001 : counter.seq;

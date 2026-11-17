@@ -39,3 +39,8 @@ export const updateStaffMember = async (id, payload) => {
   const response = await api.patch(`/admin/staff/${id}`, payload);
   return response.data;
 };
+
+export const getAdminAnalytics = async (params = {}) => {
+  const response = await api.get("/admin/analytics", { params });
+  return response.data;
+};

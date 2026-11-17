@@ -133,6 +133,7 @@ vi.mock("../src/models/Complaint.js", () => ({
       };
       return chain;
     }),
+    aggregate: vi.fn(async () => []),
   },
 }));
 
@@ -287,5 +288,14 @@ describe("Phase 3 – Admin Complaint & Staff Management", () => {
       .send({ isActive: false });
     expect(toggleRes.status).toBe(200);
     expect(toggleRes.body.data.staff.isActive).toBe(false);
+  });
+
+  it("returns analytics summary and handles empty aggregation results", async () => {
+    const res = await adminAgent.get("/api/v1/admin/analytics");
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBe(0);
+    expect(res.body.data.averageResolutionHours).toBe(0);
+    expect(res.body.data.categoryBreakdown).toEqual([]);
+    expect(res.body.data.staffWorkload).toEqual([]);
   });
 });

@@ -10,6 +10,7 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminComplaintsPage from "../pages/admin/AdminComplaintsPage";
 import AdminComplaintDetailsPage from "../pages/admin/AdminComplaintDetailsPage";
 import AdminStaffPage from "../pages/admin/AdminStaffPage";
+import AdminAnalyticsPage from "../pages/admin/AdminAnalyticsPage";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
 import StaffTasksPage from "../pages/staff/StaffTasksPage";
 import StaffTaskDetailsPage from "../pages/staff/StaffTaskDetailsPage";
@@ -50,6 +51,7 @@ export default function AppRouter() {
             element={<AdminComplaintDetailsPage />}
           />
           <Route path="/admin/staff" element={<AdminStaffPage />} />
+          <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>

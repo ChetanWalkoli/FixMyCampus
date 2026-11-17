@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  BarChart3,
   Bell,
   Building2,
   ClipboardList,
@@ -30,6 +31,7 @@ const ROLE_NAV_LINKS = {
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
     { to: "/admin/complaints", label: "All Complaints", icon: ClipboardList },
     { to: "/admin/staff", label: "Staff Management", icon: Users },
+    { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   ],
   staff: [
     { to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true },

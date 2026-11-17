@@ -4,6 +4,7 @@ import {
   createStaff,
   getAdminComplaintById,
   getAllComplaints,
+  getAnalytics,
   getStaffList,
   reviewComplaint,
   updateComplaintPriority,
@@ -15,6 +16,7 @@ const router = Router();
 
 router.use(authenticate, authorizeRoles("admin"));
 
+router.get("/analytics", getAnalytics);
 router.get("/complaints", getAllComplaints);
 router.get("/complaints/:id", getAdminComplaintById);
 router.patch("/complaints/:id/review", reviewComplaint);

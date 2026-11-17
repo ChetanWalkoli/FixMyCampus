@@ -465,3 +465,180 @@ export const updateStaff = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @route   GET /api/v1/admin/analytics
+ * @desc    Return campus maintenance analytics and aggregations
+ * @access  Admin
+ */
+export const getAnalytics = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const matchStage = {};
+
+    if (startDate || endDate) {
+      matchStage.createdAt = {};
+      if (typeof startDate === "string" && startDate.trim()) {
+        const parsedStart = new Date(startDate);
+        if (!Number.isNaN(parsedStart.getTime())) {
+          matchStage.createdAt.$gte = parsedStart;
+        }
+      }
+      if (typeof endDate === "string" && endDate.trim()) {
+        const parsedEnd = new Date(endDate);
+        if (!Number.isNaN(parsedEnd.getTime())) {
+          parsedEnd.setHours(23, 59, 59, 999);
+          matchStage.createdAt.$lte = parsedEnd;
+        }
+      }
+      if (Object.keys(matchStage.createdAt).length === 0) {
+        delete matchStage.createdAt;
+      }
+    }
+
+    const [
+      statusAgg,
+      categoryAgg,
+      monthlyAgg,
+      resolutionAgg,
+      workloadAgg,
+    ] = await Promise.all([
+      Complaint.aggregate([
+        { $match: matchStage },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Complaint.aggregate([
+        { $match: matchStage },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      Complaint.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m", date: "$createdAt" },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Complaint.aggregate([
+        {
+          $match: {
+            ...matchStage,
+            status: { $in: ["resolved", "closed"] },
+            resolvedAt: { $ne: null },
+          },
+        },
+        {
+          $project: {
+            resolutionHours: {
+              $divide: [
+                { $subtract: ["$resolvedAt", "$createdAt"] },
+                1000 * 60 * 60,
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            avgHours: { $avg: "$resolutionHours" },
+          },
+        },
+      ]),
+      Complaint.aggregate([
+        { $match: { ...matchStage, assignedTo: { $ne: null } } },
+        {
+          $group: {
+            _id: "$assignedTo",
+            totalAssigned: { $sum: 1 },
+            active: {
+              $sum: {
+                $cond: [
+                  { $in: ["$status", ["assigned", "in_progress"]] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            completed: {
+              $sum: {
+                $cond: [{ $in: ["$status", ["resolved", "closed"]] }, 1, 0],
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "staffUser",
+          },
+        },
+        { $unwind: { path: "$staffUser", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 0,
+            staffId: "$_id",
+            name: { $ifNull: ["$staffUser.name", "Unknown Staff"] },
+            department: { $ifNull: ["$staffUser.department", "General"] },
+            totalAssigned: 1,
+            active: 1,
+            completed: 1,
+          },
+        },
+        { $sort: { totalAssigned: -1 } },
+      ]),
+    ]);
+
+    const counts = {
+      total: 0,
+      pending: 0,
+      assigned: 0,
+      inProgress: 0,
+      resolved: 0,
+      closed: 0,
+      rejected: 0,
+      reopened: 0,
+    };
+
+    for (const row of statusAgg) {
+      counts.total += row.count;
+      if (row._id === "in_progress") counts.inProgress = row.count;
+      else if (row._id in counts) counts[row._id] = row.count;
+    }
+
+    const averageResolutionHours =
+      resolutionAgg.length > 0 && resolutionAgg[0].avgHours != null
+        ? Number(resolutionAgg[0].avgHours.toFixed(1))
+        : 0;
+
+    return res.status(200).json({
+      success: true,
+      message: "Analytics retrieved successfully",
+      data: {
+        ...counts,
+        averageResolutionHours,
+        categoryBreakdown: categoryAgg.map((c) => ({
+          category: c._id,
+          count: c.count,
+        })),
+        statusBreakdown: statusAgg.map((s) => ({
+          status: s._id,
+          count: s.count,
+        })),
+        monthlyTrends: monthlyAgg.map((m) => ({
+          month: m._id,
+          count: m.count,
+        })),
+        staffWorkload: workloadAgg,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
