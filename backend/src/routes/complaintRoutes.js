@@ -3,6 +3,7 @@ import {
   createComplaint,
   getMyComplaints,
   getComplaintById,
+  submitComplaintFeedback,
 } from "../controllers/complaintController.js";
 import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 import { uploadSingleImage } from "../middleware/uploadMiddleware.js";
@@ -14,5 +15,6 @@ router.use(authenticate, authorizeRoles("student"));
 router.post("/", uploadSingleImage, createComplaint);
 router.get("/my", getMyComplaints);
 router.get("/:id", getComplaintById);
+router.post("/:id/feedback", submitComplaintFeedback);
 
 export default router;

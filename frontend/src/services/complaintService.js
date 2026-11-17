@@ -18,3 +18,8 @@ export const getComplaintById = async (id) => {
   const response = await api.get(`/complaints/${id}`);
   return response.data;
 };
+
+export const submitComplaintFeedback = async (id, payload) => {
+  const response = await api.post(`/complaints/${id}/feedback`, payload);
+  return response.data;
+};

@@ -4,6 +4,7 @@ import ComplaintHistory from "../models/ComplaintHistory.js";
 import { formatZodError } from "../validators/authValidators.js";
 import { updateTaskStatusSchema } from "../validators/staffValidators.js";
 import { uploadImageBuffer } from "../services/uploadService.js";
+import { createNotification } from "../services/notificationService.js";
 
 const VALID_STAFF_TRANSITIONS = {
   assigned: ["in_progress"],
@@ -187,6 +188,21 @@ export const updateTaskStatus = async (req, res, next) => {
         (nextStatus === "in_progress"
           ? "Maintenance work started"
           : "Marked as resolved"),
+    });
+
+    await createNotification({
+      recipient: complaint.submittedBy,
+      complaint: complaint._id,
+      title:
+        nextStatus === "resolved"
+          ? `Complaint ${complaint.complaintId} Resolved`
+          : `Work Started on ${complaint.complaintId}`,
+      message:
+        nextStatus === "resolved"
+          ? `Your complaint "${complaint.title}" has been marked as resolved. Please review and submit feedback.`
+          : `Maintenance staff has started work on "${complaint.title}".`,
+      type:
+        nextStatus === "resolved" ? "complaint_resolved" : "status_updated",
     });
 
     return res.status(200).json({

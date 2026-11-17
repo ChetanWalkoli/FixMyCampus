@@ -14,6 +14,7 @@ import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
 import StaffTasksPage from "../pages/staff/StaffTasksPage";
 import StaffTaskDetailsPage from "../pages/staff/StaffTaskDetailsPage";
 import StaffHistoryPage from "../pages/staff/StaffHistoryPage";
+import NotificationsPage from "../pages/common/NotificationsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
 
@@ -56,6 +57,14 @@ export default function AppRouter() {
           <Route path="/staff/tasks" element={<StaffTasksPage />} />
           <Route path="/staff/tasks/:id" element={<StaffTaskDetailsPage />} />
           <Route path="/staff/history" element={<StaffHistoryPage />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["student", "admin", "staff"]} />
+          }
+        >
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

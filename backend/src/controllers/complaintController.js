@@ -1,10 +1,14 @@
 import mongoose from "mongoose";
 import Complaint from "../models/Complaint.js";
 import ComplaintHistory from "../models/ComplaintHistory.js";
-import { createComplaintSchema } from "../validators/complaintValidators.js";
+import {
+  createComplaintSchema,
+  feedbackSchema,
+} from "../validators/complaintValidators.js";
 import { formatZodError } from "../validators/authValidators.js";
 import { generateComplaintId } from "../utils/generateComplaintId.js";
 import { uploadImageBuffer } from "../services/uploadService.js";
+import { createNotification } from "../services/notificationService.js";
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -69,6 +73,14 @@ export const createComplaint = async (req, res, next) => {
       oldStatus: null,
       newStatus: "pending",
       note: "Complaint submitted by student",
+    });
+
+    await createNotification({
+      recipient: req.user._id,
+      complaint: complaint._id,
+      title: `Complaint ${complaint.complaintId} Submitted`,
+      message: `Your complaint "${complaint.title}" has been received and is pending review.`,
+      type: "complaint_submitted",
     });
 
     return res.status(201).json({
@@ -194,6 +206,118 @@ export const getComplaintById = async (req, res, next) => {
         complaint,
         history,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/v1/complaints/:id/feedback
+ * @desc    Submit resolution rating/feedback (close) or reopen a resolved complaint
+ * @access  Student
+ */
+export const submitComplaintFeedback = async (req, res, next) => {
+  try {
+    const parsed = feedbackSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: formatZodError(parsed.error),
+      });
+    }
+
+    const { id } = req.params;
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { complaintId: id };
+
+    const complaint = await Complaint.findOne(query);
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "Complaint not found",
+      });
+    }
+
+    if (complaint.submittedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to submit feedback for this complaint",
+      });
+    }
+
+    if (complaint.status !== "resolved") {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback can only be submitted for resolved complaints",
+      });
+    }
+
+    if (complaint.feedback?.submittedAt) {
+      return res.status(409).json({
+        success: false,
+        message: "Feedback has already been submitted for this complaint",
+      });
+    }
+
+    const { action, rating, comment } = parsed.data;
+    const oldStatus = complaint.status;
+
+    if (action === "reopen") {
+      complaint.status = "reopened";
+      await complaint.save();
+
+      await ComplaintHistory.create({
+        complaint: complaint._id,
+        updatedBy: req.user._id,
+        action: "reopened",
+        oldStatus,
+        newStatus: "reopened",
+        note: comment,
+      });
+
+      if (complaint.assignedTo) {
+        await createNotification({
+          recipient: complaint.assignedTo,
+          complaint: complaint._id,
+          title: `Complaint ${complaint.complaintId} Reopened`,
+          message: `Student reopened "${complaint.title}": ${comment}`,
+          type: "complaint_reopened",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Complaint reopened for further review",
+        data: { complaint },
+      });
+    }
+
+    complaint.feedback = {
+      rating,
+      comment: comment || "",
+      submittedAt: new Date(),
+    };
+    complaint.status = "closed";
+    complaint.closedAt = new Date();
+    await complaint.save();
+
+    await ComplaintHistory.create({
+      complaint: complaint._id,
+      updatedBy: req.user._id,
+      action: "closed",
+      oldStatus,
+      newStatus: "closed",
+      note: comment
+        ? `Rated ${rating}/5: ${comment}`
+        : `Rated ${rating}/5 and closed`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Thank you for your feedback! Complaint is now closed.",
+      data: { complaint },
     });
   } catch (error) {
     next(error);

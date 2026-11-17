@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Complaint from "../models/Complaint.js";
 import ComplaintHistory from "../models/ComplaintHistory.js";
 import User from "../models/User.js";
+import { createNotification } from "../services/notificationService.js";
 import { formatZodError } from "../validators/authValidators.js";
 import {
   assignStaffSchema,
@@ -195,6 +196,14 @@ export const reviewComplaint = async (req, res, next) => {
         newStatus: "rejected",
         note,
       });
+
+      await createNotification({
+        recipient: complaint.submittedBy,
+        complaint: complaint._id,
+        title: `Complaint ${complaint.complaintId} Rejected`,
+        message: `Your complaint "${complaint.title}" was rejected: ${note}`,
+        type: "status_updated",
+      });
     } else {
       await ComplaintHistory.create({
         complaint: complaint._id,
@@ -278,6 +287,23 @@ export const assignStaff = async (req, res, next) => {
       newStatus: "assigned",
       note: note || `Assigned to ${staff.name}`,
     });
+
+    await Promise.all([
+      createNotification({
+        recipient: complaint.submittedBy,
+        complaint: complaint._id,
+        title: `Staff Assigned to ${complaint.complaintId}`,
+        message: `${staff.name} has been assigned to resolve "${complaint.title}".`,
+        type: "complaint_assigned",
+      }),
+      createNotification({
+        recipient: staff._id,
+        complaint: complaint._id,
+        title: `New Task Assigned: ${complaint.complaintId}`,
+        message: `You have been assigned "${complaint.title}" at ${complaint.location?.block || "campus"}.`,
+        type: "complaint_assigned",
+      }),
+    ]);
 
     const populated = await Complaint.findById(complaint._id)
       .populate("submittedBy", "name email department studentId")

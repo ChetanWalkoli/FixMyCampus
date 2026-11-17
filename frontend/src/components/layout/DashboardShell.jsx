@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  Bell,
   Building2,
   ClipboardList,
   History,
@@ -11,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { getNotifications } from "../../services/notificationService";
 
 const ROLE_LABELS = {
   student: "Student Portal",
@@ -40,6 +42,23 @@ export default function DashboardShell({ title, subtitle, actions, children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadUnread = async () => {
+      try {
+        const res = await getNotifications();
+        if (isMounted) setUnreadCount(res.data?.unreadCount || 0);
+      } catch {
+        // Ignore badge polling error
+      }
+    };
+    loadUnread();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const navLinks = ROLE_NAV_LINKS[user?.role] || [];
 
@@ -99,6 +118,18 @@ export default function DashboardShell({ title, subtitle, actions, children }) {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              to="/notifications"
+              aria-label="Notifications"
+              className="relative rounded-lg border border-slate-200 bg-white p-2 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-slate-900">{user?.name}</p>
               <p className="text-xs text-slate-500">{user?.email}</p>

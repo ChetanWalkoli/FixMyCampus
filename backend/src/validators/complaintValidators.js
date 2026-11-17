@@ -36,3 +36,28 @@ export const createComplaintSchema = z.object({
   priority: z.enum(COMPLAINT_PRIORITIES).optional().default("medium"),
   location: locationSchema,
 });
+
+export const feedbackSchema = z
+  .object({
+    action: z.enum(["close", "reopen"]).optional().default("close"),
+    rating: z.number().int().min(1).max(5).optional(),
+    comment: z.string().trim().max(500).optional(),
+  })
+  .refine(
+    (data) =>
+      data.action === "reopen" ||
+      (data.rating !== undefined && data.rating >= 1 && data.rating <= 5),
+    {
+      message: "Please select a rating between 1 and 5 stars",
+      path: ["rating"],
+    }
+  )
+  .refine(
+    (data) =>
+      data.action !== "reopen" ||
+      (data.comment && data.comment.trim().length >= 5),
+    {
+      message: "Please explain why the issue is being reopened",
+      path: ["comment"],
+    }
+  );
