@@ -7,6 +7,7 @@ import {
   LogOut,
   PlusCircle,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,7 +23,11 @@ const ROLE_NAV_LINKS = {
     { to: "/student/complaints", label: "My Complaints", icon: ClipboardList },
     { to: "/student/complaints/new", label: "New Complaint", icon: PlusCircle },
   ],
-  admin: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true }],
+  admin: [
+    { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/admin/complaints", label: "All Complaints", icon: ClipboardList },
+    { to: "/admin/staff", label: "Staff Management", icon: Users },
+  ],
   staff: [{ to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true }],
 };
 

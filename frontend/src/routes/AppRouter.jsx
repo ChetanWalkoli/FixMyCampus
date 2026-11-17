@@ -7,6 +7,9 @@ import MyComplaintsPage from "../pages/student/MyComplaintsPage";
 import NewComplaintPage from "../pages/student/NewComplaintPage";
 import ComplaintDetailsPage from "../pages/student/ComplaintDetailsPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminComplaintsPage from "../pages/admin/AdminComplaintsPage";
+import AdminComplaintDetailsPage from "../pages/admin/AdminComplaintDetailsPage";
+import AdminStaffPage from "../pages/admin/AdminStaffPage";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
@@ -37,6 +40,12 @@ export default function AppRouter() {
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
+          <Route
+            path="/admin/complaints/:id"
+            element={<AdminComplaintDetailsPage />}
+          />
+          <Route path="/admin/staff" element={<AdminStaffPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
