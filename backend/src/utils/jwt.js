@@ -26,12 +26,16 @@ export const verifyToken = (token) => {
   return jwt.verify(token, getJwtSecret());
 };
 
-const getCookieOptions = () => {
-  const isProduction = env.nodeEnv === "production";
+export const getCookieOptions = () => {
+  const isCrossSiteHttps =
+    env.nodeEnv === "production" ||
+    env.isRender ||
+    env.frontendUrl.startsWith("https://");
+
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    secure: isCrossSiteHttps,
+    sameSite: isCrossSiteHttps ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000, // 1 day
     path: "/",
   };

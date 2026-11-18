@@ -20,10 +20,18 @@ app.set("trust proxy", 1);
 // Security headers
 app.use(helmet());
 
-// Credentials-enabled CORS for the configured frontend origin
+// Credentials-enabled CORS for configured frontend origin(s)
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin: (origin, callback) => {
+      // Allow non-browser / same-origin requests without an Origin header
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/+$/, "");
+      if (env.allowedOrigins.includes(normalized)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );

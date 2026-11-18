@@ -51,6 +51,8 @@ vi.mock("../src/models/User.js", () => {
 });
 
 const { default: app } = await import("../src/app.js");
+const { getCookieOptions } = await import("../src/utils/jwt.js");
+const { default: envConfig } = await import("../src/config/env.js");
 
 describe("Phase 1 – Authentication & Role-Based Access", () => {
   beforeEach(() => {
@@ -185,5 +187,21 @@ describe("Phase 1 – Authentication & Role-Based Access", () => {
 
     expect(createdRes.status).toBe(201);
     expect(createdRes.body.data.user.role).toBe("staff");
+  });
+
+  it("sets Secure and SameSite=None cookie options in production or HTTPS origins", () => {
+    const originalEnv = envConfig.nodeEnv;
+    const originalUrl = envConfig.frontendUrl;
+
+    envConfig.nodeEnv = "production";
+    envConfig.frontendUrl = "https://fixmycampus.vercel.app";
+    const prodOpts = getCookieOptions();
+    expect(prodOpts.httpOnly).toBe(true);
+    expect(prodOpts.secure).toBe(true);
+    expect(prodOpts.sameSite).toBe("none");
+    expect(prodOpts.path).toBe("/");
+
+    envConfig.nodeEnv = originalEnv;
+    envConfig.frontendUrl = originalUrl;
   });
 });
